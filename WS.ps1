@@ -13,7 +13,7 @@ function GenerateForm {
 
 #region Generated Form Objects
 $HelpDeskForm = New-Object System.Windows.Forms.Form
-$UnlockAccountButton = New-Object System.Windows.Forms.Button
+$GoButton = New-Object System.Windows.Forms.Button
 $objListBox = New-Object System.Windows.Forms.ListBox 
 $InitialFormWindowState = New-Object System.Windows.Forms.FormWindowState
 #endregion Generated Form Objects
@@ -22,55 +22,132 @@ $InitialFormWindowState = New-Object System.Windows.Forms.FormWindowState
 #Generated Event Script Blocks
 #----------------------------------------------
 #Provide Custom Code for events specified in PrimalForms.
-$handler_UnlockAccountButton_Click=
+$handler_GoButton_Click=
 {
-$objListBox.SelectedItem| out-host
-#TODO: Place custom script here
+    #MAIN BODY
+    $filename = "c:\temp\"+$objTextBox.Text
+    #$filename | out-host
+    wireshark -i $objListBox.SelectedItem  -k -w $filename
+    do {
+        Start-Sleep 5
+        $objTextBoxM.Text=("Filesize is "+((Get-Item $filename).Length/1kb))
+        }
+    until (((Get-Item $filename).Length/1kb) -gt $objTextBoxMFS.Text)
+    $objTextBoxM.Text=("Filesize limit of "+$objTextBoxMFS.Text+"reached, stopping capture")
+        # Kill all wireshark processes
+        do {
+        Start-Sleep -seconds 2
+        $ProcMonTestProcess = Get-Process | where {$_.ProcessName -eq "wireshark"}
+        if ($ProcMonTestProcess){
+        Stop-Process $ProcMonTestProcess.Id}
+        }while(
+        $ProcMonTestProcess.Id -eq $true
+        )
+        
 
 }
 
 $OnLoadForm_StateCorrection=
-{#Correct the initial state of the form to prevent the .Net maximized form issue
-$HelpDeskForm.WindowState = $InitialFormWindowState
-#Get-NetAdapter | [void] $objListBox.Items.Add($_.name)
+{   #Correct the initial state of the form to prevent the .Net maximized form issue
+    $HelpDeskForm.WindowState = $InitialFormWindowState
+    $objTextBoxM.ReadOnly=$true
+    # Kill all wireshark processes
+ <#   do{
+    Start-Sleep -seconds 2
+    $ProcMonTestProcess = Get-Process | where {$_.ProcessName -eq "wireshark"}
+    if ($ProcMonTestProcess){
+    Stop-Process $ProcMonTestProcess.Id}
+    }while(
+    $ProcMonTestProcess.Id -eq $true
+    )
+    # Kill all dumpcap.exe processes
+    do{
+    Start-Sleep -seconds 2
+    $ProcMonTestProcess = Get-Process | where {$_.ProcessName -eq "dumpcap"}
+    if ($ProcMonTestProcess){
+    Stop-Process $ProcMonTestProcess.Id}
+    }while(
+    $ProcMonTestProcess.Id -eq $true
+    )
+    #>
 }
 
 #----------------------------------------------
-#region Generated Form Code
-$HelpDeskForm.Text = "Our Help Desk"
+#Main form
+$HelpDeskForm.Text = "Wiresharker"
 $HelpDeskForm.Name = "HelpDeskForm"
 $HelpDeskForm.DataBindings.DefaultDataSourceUpdateMode = 0
 $System_Drawing_Size = New-Object System.Drawing.Size
 $System_Drawing_Size.Width = 280
-$System_Drawing_Size.Height = 550
+$System_Drawing_Size.Height = 255
 $HelpDeskForm.ClientSize = $System_Drawing_Size
 
-$UnlockAccountButton.TabIndex = 0
-$UnlockAccountButton.Name = "UnlockAccountButton"
+#GO button
+$GoButton.TabIndex = 0
+$GoButton.Name = "GoButton"
 $System_Drawing_Size = New-Object System.Drawing.Size
 $System_Drawing_Size.Width = 262
 $System_Drawing_Size.Height = 23
-$UnlockAccountButton.Size = $System_Drawing_Size
-$UnlockAccountButton.UseVisualStyleBackColor = $True
-
-$UnlockAccountButton.Text = "Get job done"
+$GoButton.Size = $System_Drawing_Size
+$GoButton.UseVisualStyleBackColor = $True
+$GoButton.Text = "GO"
 
 $System_Drawing_Point = New-Object System.Drawing.Point
 $System_Drawing_Point.X = 9
-$System_Drawing_Point.Y = 120
-$UnlockAccountButton.Location = $System_Drawing_Point
-$UnlockAccountButton.DataBindings.DefaultDataSourceUpdateMode = 0
-$UnlockAccountButton.add_Click($handler_UnlockAccountButton_Click)
+$System_Drawing_Point.Y = 220
+$GoButton.Location = $System_Drawing_Point
+$GoButton.DataBindings.DefaultDataSourceUpdateMode = 0
+$GoButton.add_Click($handler_GoButton_Click)
 
+#List box with interfaces
 $objListBox = New-Object System.Windows.Forms.ListBox 
 $objListBox.Location = New-Object System.Drawing.Size(10,30) 
 $objListBox.Size = New-Object System.Drawing.Size(260,20) 
 $objListBox.Height = 90
 Get-NetAdapter | % {[void] $objListBox.Items.Add($_.name)}
 
+#Top label
+$objLabel = New-Object System.Windows.Forms.Label
+$objLabel.Location = New-Object System.Drawing.Size(10,10) 
+$objLabel.Size = New-Object System.Drawing.Size(280,20) 
+$objLabel.Text = "Please select NIC to capture:"
+
+#Filename label
+$objLabelFN = New-Object System.Windows.Forms.Label
+$objLabelFN.Location = New-Object System.Drawing.Size(10,115) 
+$objLabelFN.Size = New-Object System.Drawing.Size(280,20) 
+$objLabelFN.Text = "Base filename:"
+
+#Text Box base file name
+$objTextBox = New-Object System.Windows.Forms.TextBox 
+$objTextBox.Location = New-Object System.Drawing.Size(10,135) 
+$objTextBox.Size = New-Object System.Drawing.Size(260,20) 
+
+#Lebel max file size
+$objLabelMFS = New-Object System.Windows.Forms.Label
+$objLabelMFS.Location = New-Object System.Drawing.Size(10,170) 
+$objLabelMFS.Size = New-Object System.Drawing.Size(100,20) 
+$objLabelMFS.Text = "Max file size (Mb):"
+
+#Text box max filesize
+$objTextBoxMFS = New-Object System.Windows.Forms.TextBox 
+$objTextBoxMFS.Location = New-Object System.Drawing.Size(110,165) 
+$objTextBoxMFS.Size = New-Object System.Drawing.Size(160,20) 
+
+#Text box Messages
+$objTextBoxM = New-Object System.Windows.Forms.TextBox 
+$objTextBoxM.Location = New-Object System.Drawing.Size(10,195) 
+$objTextBoxM.Size = New-Object System.Drawing.Size(260,20) 
+
 
 $HelpDeskForm.Controls.Add($objListBox)
-$HelpDeskForm.Controls.Add($UnlockAccountButton)
+$HelpDeskForm.Controls.Add($GoButton)
+$HelpDeskForm.Controls.Add($objLabel) 
+$HelpDeskForm.Controls.Add($objLabelFN) 
+$HelpDeskForm.Controls.Add($objLabelMFS) 
+$HelpDeskForm.Controls.Add($objTextBox) 
+$HelpDeskForm.Controls.Add($objTextBoxMFS) 
+$HelpDeskForm.Controls.Add($objTextBoxM) 
 
 #endregion Generated Form Code
 
@@ -85,3 +162,5 @@ $HelpDeskForm.ShowDialog()| Out-Null
 
 #Call the Function
 GenerateForm 
+
+
