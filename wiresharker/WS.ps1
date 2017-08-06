@@ -7,7 +7,7 @@ function GenerateForm {
 #endregion
 
 #region Generated Form Objects
-$HelpDeskForm = New-Object System.Windows.Forms.Form
+$WSForm = New-Object System.Windows.Forms.Form
 $GoButton = New-Object System.Windows.Forms.Button
 $objListBox = New-Object System.Windows.Forms.ListBox 
 $InitialFormWindowState = New-Object System.Windows.Forms.FormWindowState
@@ -34,15 +34,15 @@ $handler_GoButton_Click=
             #Change this to MB
             $objTextBoxM.Text=("Filesize is "+([math]::Round((Get-Item $filename).Length/1kb,2))+"KB")
             }
-        until ((((Get-Item $filename).Length/1kb) -gt $objTextBoxMFS.Text) -or ((Get-Process | where {$_.Name -like "Wireshark"}) -eq $null) -or ( ((Get-Date) - $FirststartDate).seconds -gt $objTextBoxMFT.Text ))
+        until ((((Get-Item $filename).Length/1kb) -gt $objTextBoxMFS.Text) -or ((Get-Process | where {$_.Name -like "Wireshark"}) -eq $null) -or ( ((Get-Date) - $FirststartDate).minutes -gt $objTextBoxMFT.Text ))
         #Write Correct status in console
         IF ((Get-Process | where {$_.Name -like "Wireshark"}) -eq $null) 
             {
             $objTextBoxM.Text="Wireshark process exited."
             $i=$i+999999999
             }
-        IF (((Get-Item $filename).Length/1kb) -gt $objTextBoxMFS.Text) {$objTextBoxM.Text=("Filesize limit of "+$objTextBoxMFS.Text+" reached, stopping capture")}
-        IF ( ((Get-Date) - $FirststartDate).seconds -gt $objTextBoxMFT.Text  ) {$objTextBoxM.Text=("Wireshark was running for " + ((Get-Date) - $FirststartDate).seconds + " seconds")}
+        IF (((Get-Item $filename).Length/1kb) -gt $objTextBoxMFS.Text) {$objTextBoxM.Text=("Filesize limit of "+$objTextBoxMFS.Text+" reached, stopping capture"); Start-Sleep 2}
+        IF ( ((Get-Date) - $FirststartDate).minutes -gt $objTextBoxMFT.Text  ) {$objTextBoxM.Text=("Wireshark was running for " + ((Get-Date) - $FirststartDate).minutes + " minutes")}
 
             $i++
             if ($i -le $objTextBoxI.Text) {$objTextBoxM.Text="Iteration $i started..."}
@@ -67,7 +67,7 @@ $handler_GoButton_Click=
 
 $OnLoadForm_StateCorrection=
 {   #Correct the initial state of the form to prevent the .Net maximized form issue
-    $HelpDeskForm.WindowState = $InitialFormWindowState
+    $WSForm.WindowState = $InitialFormWindowState
     $objTextBoxM.ReadOnly=$true
     $objListBox.SelectedIndex=0
     $objTextBox.Text='WiresharkCapture'
@@ -99,13 +99,13 @@ $objTextBoxFilesToKeep_txtCHanged_handler=
 
 #----------------------------------------------
 #Main form
-$HelpDeskForm.Text = "Wiresharker"
-$HelpDeskForm.Name = "HelpDeskForm"
-$HelpDeskForm.DataBindings.DefaultDataSourceUpdateMode = 0
+$WSForm.Text = "Wiresharker"
+$WSForm.Name = "WSForm"
+$WSForm.DataBindings.DefaultDataSourceUpdateMode = 0
 $System_Drawing_Size = New-Object System.Drawing.Size
 $System_Drawing_Size.Width = 280
 $System_Drawing_Size.Height = 345
-$HelpDeskForm.ClientSize = $System_Drawing_Size
+$WSForm.ClientSize = $System_Drawing_Size
 
 #GO button
 $GoButton.TabIndex = 7
@@ -208,34 +208,34 @@ $objTextBoxM = New-Object System.Windows.Forms.TextBox
 $objTextBoxM.Location = New-Object System.Drawing.Size(10,305) 
 $objTextBoxM.Size = New-Object System.Drawing.Size(260,20) 
 
-$Icon = New-Object system.drawing.icon ("$PSScriptRoot\wireshark_16px.ico")
-$HelpDeskForm.Icon = $Icon 
+$Icon = New-Object system.drawing.icon ("$PSScriptRoot\16px.ico")
+$WSForm.Icon = $Icon 
 
 
-$HelpDeskForm.Controls.Add($objListBox)
-$HelpDeskForm.Controls.Add($GoButton)
-$HelpDeskForm.Controls.Add($objLabel) 
-$HelpDeskForm.Controls.Add($objLabelFN) 
-$HelpDeskForm.Controls.Add($objLabelMFS) 
-$HelpDeskForm.Controls.Add($objTextBox) 
-$HelpDeskForm.Controls.Add($objTextBoxMFS) 
-$HelpDeskForm.Controls.Add($objTextBoxMFT) 
-$HelpDeskForm.Controls.Add($objTextBoxI) 
-$HelpDeskForm.Controls.Add($objLabelMFT) 
-$HelpDeskForm.Controls.Add($objTextBoxM) 
-$HelpDeskForm.Controls.Add($objLabelI)
-$HelpDeskForm.Controls.Add($objLabelFilesToKeep)
-$HelpDeskForm.Controls.Add($objTextBoxFilesToKeep)
+$WSForm.Controls.Add($objListBox)
+$WSForm.Controls.Add($GoButton)
+$WSForm.Controls.Add($objLabel) 
+$WSForm.Controls.Add($objLabelFN) 
+$WSForm.Controls.Add($objLabelMFS) 
+$WSForm.Controls.Add($objTextBox) 
+$WSForm.Controls.Add($objTextBoxMFS) 
+$WSForm.Controls.Add($objTextBoxMFT) 
+$WSForm.Controls.Add($objTextBoxI) 
+$WSForm.Controls.Add($objLabelMFT) 
+$WSForm.Controls.Add($objTextBoxM) 
+$WSForm.Controls.Add($objLabelI)
+$WSForm.Controls.Add($objLabelFilesToKeep)
+$WSForm.Controls.Add($objTextBoxFilesToKeep)
 
 
 #Save the initial state of the form
-$InitialFormWindowState = $HelpDeskForm.WindowState
-$HelpDeskForm.FormBorderStyle = "FixedSingle"
-$HelpDeskForm.MaximizeBox = $false;
+$InitialFormWindowState = $WSForm.WindowState
+$WSForm.FormBorderStyle = "FixedSingle"
+$WSForm.MaximizeBox = $false;
 #Init the OnLoad event to correct the initial state of the form
-$HelpDeskForm.add_Load($OnLoadForm_StateCorrection)
+$WSForm.add_Load($OnLoadForm_StateCorrection)
 #Show the Form
-$HelpDeskForm.ShowDialog()| Out-Null
+$WSForm.ShowDialog()| Out-Null
 
 } #End Function
 
