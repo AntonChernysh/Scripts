@@ -27,7 +27,7 @@ $handler_GoButton_Click=
     IF (($objTextBox.Text -ne "") -and ($objTextBoxMFS.Text -ne "") -and ($objTextBoxI.Text -ne ""))
     {
         wireshark -i $objListBox.SelectedItem  -k -w $filename
-        Start-Sleep 5
+        Start-Sleep 7 
         $FirststartDate = Get-Date
         do {
             Start-Sleep 1
@@ -36,7 +36,11 @@ $handler_GoButton_Click=
             }
         until ((((Get-Item $filename).Length/1kb) -gt $objTextBoxMFS.Text) -or ((Get-Process | where {$_.Name -like "Wireshark"}) -eq $null) -or ( ((Get-Date) - $FirststartDate).seconds -gt $objTextBoxMFT.Text ))
         #Write Correct status in console
-        IF ((Get-Process | where {$_.Name -like "Wireshark"}) -eq $null) {$objTextBoxM.Text=("Wireshark process exited.")}
+        IF ((Get-Process | where {$_.Name -like "Wireshark"}) -eq $null) 
+            {
+            $objTextBoxM.Text="Wireshark process exited."
+            $i=$i+99999999
+            }
         IF (((Get-Item $filename).Length/1kb) -gt $objTextBoxMFS.Text) {$objTextBoxM.Text=("Filesize limit of "+$objTextBoxMFS.Text+" reached, stopping capture")}
         IF ( ((Get-Date) - $FirststartDate).seconds -gt $objTextBoxMFT.Text  ) {$objTextBoxM.Text=("Wireshark was running for " + ((Get-Date) - $FirststartDate).seconds + " seconds")}
 
@@ -51,7 +55,7 @@ $handler_GoButton_Click=
             while ($ProcMonTestProcess.Id -eq $true)
         }
     ELSE
-        {$objTextBoxM.Text="ERROR: Make sure there are no blank field"}
+        {$objTextBoxM.Text="ERROR: Make sure there are no blank fields"}
     }
     UNTIL ($i -gt $objTextBoxI.Text)
 
