@@ -23,7 +23,7 @@ $handler_GoButton_Click=
    $i=1
    do {
    $date=Get-Date
-   $filename = ".\"+$objTextBox.Text+"-"+$date.Year+"-"+$date.Month+"-"+$date.Day+"_"+$date.Hour+"-"+$date.minute+"-"+$date.Second+".pcapng" 
+   $filename = $PSScriptRoot+"\"+$objTextBox.Text+"-"+$date.Year+"-"+$date.Month+"-"+$date.Day+"_"+$date.Hour+"-"+$date.minute+"-"+$date.Second+".pcapng" 
     IF (($objTextBox.Text -ne "") -and ($objTextBoxMFS.Text -ne "") -and ($objTextBoxI.Text -ne ""))
     {
         wireshark -i $objListBox.SelectedItem  -k -w $filename
@@ -45,9 +45,9 @@ $handler_GoButton_Click=
         IF ( ((Get-Date) - $FirststartDate).seconds -gt $objTextBoxMFT.Text  ) {$objTextBoxM.Text=("Wireshark was running for " + ((Get-Date) - $FirststartDate).seconds + " seconds")}
 
             $i++
+            if ($i -le $objTextBoxI.Text) {$objTextBoxM.Text="Iteration $i started..."}
             #Kill all wireshark processes
             do {
-            #Start-Sleep -seconds 1
             $ProcMonTestProcess = Get-Process | where {$_.ProcessName -eq "wireshark"}
             if ($ProcMonTestProcess){
             Stop-Process $ProcMonTestProcess.Id}
@@ -56,7 +56,7 @@ $handler_GoButton_Click=
             $basefilename=$objTextBox.Text
             
             #Cleanup old files
-            dir| where {$_.name -like "$basefilename*"} | % { if (-not ( (dir | where {$_.name -like "$basefilename*"} | sort CreationTime | select -Last $objTextBoxFilesToKeep.Text Name) -match $_.name)) { Remove-Item $_ -Force} }
+            dir $PSScriptRoot| where {$_.name -like "$basefilename*"} | % { if (-not ( (dir $PSScriptRoot | where {$_.name -like "$basefilename*"} | sort CreationTime | select -Last $objTextBoxFilesToKeep.Text Name) -match $_.name)) { Remove-Item ($PSScriptRoot+"\"+$_) -Force} }
         }
     ELSE
         {$objTextBoxM.Text="ERROR: Make sure there are no blank fields"}
@@ -208,7 +208,7 @@ $objTextBoxM = New-Object System.Windows.Forms.TextBox
 $objTextBoxM.Location = New-Object System.Drawing.Size(10,305) 
 $objTextBoxM.Size = New-Object System.Drawing.Size(260,20) 
 
-$Icon = New-Object system.drawing.icon (".\wireshark_16px.ico")
+$Icon = New-Object system.drawing.icon ("$PSScriptRoot\wireshark_16px.ico")
 $HelpDeskForm.Icon = $Icon 
 
 
