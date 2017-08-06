@@ -20,33 +20,40 @@ $InitialFormWindowState = New-Object System.Windows.Forms.FormWindowState
 $handler_GoButton_Click=
 {
    #MAIN BODY
-   $filename = ".\"+$objTextBox.Text
-   $FirststartDate = Get-Date
-   IF (($objTextBox.Text -ne "") -and ($objTextBoxMFS.Text -ne "")){
-    wireshark -i $objListBox.SelectedItem  -k -w $filename
-    do {
-        Start-Sleep 1
-        #Change this to MB
-        $objTextBoxM.Text=("Filesize is "+([math]::Round((Get-Item $filename).Length/1kb,2))+"KB")
-        }
-    until ((((Get-Item $filename).Length/1kb) -gt $objTextBoxMFS.Text) -or ((Get-Process | where {$_.Name -like "Wireshark"}) -eq $null) -or ( ((Get-Date) - $FirststartDate).seconds -gt $objTextBoxMFT.Text  ))
-    #Write Correct status in console
-    IF ((Get-Process | where {$_.Name -like "Wireshark"}) -eq $null) {$objTextBoxM.Text=("Wireshark process exited.")}
-    IF (((Get-Item $filename).Length/1kb) -gt $objTextBoxMFS.Text) {$objTextBoxM.Text=("Filesize limit of "+$objTextBoxMFS.Text+" reached, stopping capture")}
-    IF ( ((Get-Date) - $FirststartDate).seconds -gt $objTextBoxMFT.Text  ) {$objTextBoxM.Text=("Wireshark was running for " + ((Get-Date) - $FirststartDate).seconds + " seconds")}
-
-        #Kill all wireshark processes
+   $i=1
+   do {
+   $date=Get-Date
+   $filename = ".\"+$objTextBox.Text+"-"+$date.Year+"-"+$date.Month+"-"+$date.Day+"_"+$date.Hour+"-"+$date.minute+"-"+$date.Second+".pcapng" 
+    IF (($objTextBox.Text -ne "") -and ($objTextBoxMFS.Text -ne "") -and ($objTextBoxI.Text -ne ""))
+    {
+        wireshark -i $objListBox.SelectedItem  -k -w $filename
+        Start-Sleep 5
+        $FirststartDate = Get-Date
         do {
-        #Start-Sleep -seconds 1
-        $ProcMonTestProcess = Get-Process | where {$_.ProcessName -eq "wireshark"}
-        if ($ProcMonTestProcess){
-        Stop-Process $ProcMonTestProcess.Id}
-        }while(
-        $ProcMonTestProcess.Id -eq $true
-        )
+            Start-Sleep 1
+            #Change this to MB
+            $objTextBoxM.Text=("Filesize is "+([math]::Round((Get-Item $filename).Length/1kb,2))+"KB")
+            }
+        until ((((Get-Item $filename).Length/1kb) -gt $objTextBoxMFS.Text) -or ((Get-Process | where {$_.Name -like "Wireshark"}) -eq $null) -or ( ((Get-Date) - $FirststartDate).seconds -gt $objTextBoxMFT.Text ))
+        #Write Correct status in console
+        IF ((Get-Process | where {$_.Name -like "Wireshark"}) -eq $null) {$objTextBoxM.Text=("Wireshark process exited.")}
+        IF (((Get-Item $filename).Length/1kb) -gt $objTextBoxMFS.Text) {$objTextBoxM.Text=("Filesize limit of "+$objTextBoxMFS.Text+" reached, stopping capture")}
+        IF ( ((Get-Date) - $FirststartDate).seconds -gt $objTextBoxMFT.Text  ) {$objTextBoxM.Text=("Wireshark was running for " + ((Get-Date) - $FirststartDate).seconds + " seconds")}
+
+            $i++
+            #Kill all wireshark processes
+            do {
+            #Start-Sleep -seconds 1
+            $ProcMonTestProcess = Get-Process | where {$_.ProcessName -eq "wireshark"}
+            if ($ProcMonTestProcess){
+            Stop-Process $ProcMonTestProcess.Id}
+            }
+            while ($ProcMonTestProcess.Id -eq $true)
         }
     ELSE
         {$objTextBoxM.Text="ERROR: Make sure there are no blank field"}
+    }
+    UNTIL ($i -gt $objTextBoxI.Text)
 
 }
 
@@ -67,6 +74,11 @@ $objTextBoxMFT_txtCHanged_handler=
    if ($objTextBoxMFT.Text -match '\D'){
         $objTextBoxMFT.Text = $objTextBoxMFT.Text -replace '\D' }
 }
+$objTextBoxI_txtCHanged_handler=
+{
+   if ($objTextBoxI.Text -match '\D'){
+        $objTextBoxI.Text = $objTextBoxI.Text -replace '\D' }
+}
 
 #----------------------------------------------
 #Main form
@@ -75,7 +87,7 @@ $HelpDeskForm.Name = "HelpDeskForm"
 $HelpDeskForm.DataBindings.DefaultDataSourceUpdateMode = 0
 $System_Drawing_Size = New-Object System.Drawing.Size
 $System_Drawing_Size.Width = 280
-$System_Drawing_Size.Height = 285
+$System_Drawing_Size.Height = 385
 $HelpDeskForm.ClientSize = $System_Drawing_Size
 
 #GO button
@@ -90,7 +102,7 @@ $GoButton.Text = "GO"
 
 $System_Drawing_Point = New-Object System.Drawing.Point
 $System_Drawing_Point.X = 9
-$System_Drawing_Point.Y = 220
+$System_Drawing_Point.Y = 250
 $GoButton.Location = $System_Drawing_Point
 $GoButton.DataBindings.DefaultDataSourceUpdateMode = 0
 $GoButton.add_Click($handler_GoButton_Click)
@@ -121,22 +133,9 @@ $objTextBox.Location = New-Object System.Drawing.Size(10,135)
 $objTextBox.Size = New-Object System.Drawing.Size(260,20) 
 $objTextBox.TabIndex = 1
 
-#Lebel max file size
-$objLabelMFS = New-Object System.Windows.Forms.Label
-$objLabelMFS.Location = New-Object System.Drawing.Size(10,195) 
-$objLabelMFS.Size = New-Object System.Drawing.Size(100,20) 
-$objLabelMFS.Text = "Max file size (KB):"
-
-#Text box max filesize
-$objTextBoxMFS = New-Object System.Windows.Forms.TextBox 
-$objTextBoxMFS.Location = New-Object System.Drawing.Size(150,190) 
-$objTextBoxMFS.Size = New-Object System.Drawing.Size(120,20) 
-$objTextBoxMFS.add_TextChanged($objTextBoxMFS_txtCHanged_handler)
-$objTextBoxMFS.TabIndex = 3
-
 #Lebel max file time
 $objLabelMFT = New-Object System.Windows.Forms.Label
-$objLabelMFT.Location = New-Object System.Drawing.Size(10,167) 
+$objLabelMFT.Location = New-Object System.Drawing.Size(10,165) 
 $objLabelMFT.Size = New-Object System.Drawing.Size(150,20) 
 $objLabelMFT.Text = "Max file time (minutes):"
 
@@ -148,9 +147,36 @@ $objTextBoxMFT.Size = New-Object System.Drawing.Size(120,20)
 $objTextBoxMFT.add_TextChanged($objTextBoxMFT_txtCHanged_handler)
 $objTextBoxMFT.TabIndex = 2
 
+#Lebel max file size
+$objLabelMFS = New-Object System.Windows.Forms.Label
+$objLabelMFS.Location = New-Object System.Drawing.Size(10,195) 
+$objLabelMFS.Size = New-Object System.Drawing.Size(100,20) 
+$objLabelMFS.Text = "Max file size (KB):"
+
+#Text box max filesize
+$objTextBoxMFS = New-Object System.Windows.Forms.TextBox 
+$objTextBoxMFS.Location = New-Object System.Drawing.Size(150,191) 
+$objTextBoxMFS.Size = New-Object System.Drawing.Size(120,20) 
+$objTextBoxMFS.add_TextChanged($objTextBoxMFS_txtCHanged_handler)
+$objTextBoxMFS.TabIndex = 3
+
+#Lebel Iteraations
+$objLabelI = New-Object System.Windows.Forms.Label
+$objLabelI.Location = New-Object System.Drawing.Size(10,225) 
+$objLabelI.Size = New-Object System.Drawing.Size(150,20) 
+$objLabelI.Text = "Number of iterations:"
+
+#Text box iterations
+$objTextBoxI = New-Object System.Windows.Forms.TextBox 
+$objTextBoxI.Location = New-Object System.Drawing.Size(150,220) 
+$objTextBoxI.Size = New-Object System.Drawing.Size(120,20) 
+$objTextBoxI.add_TextChanged($objTextBoxI_txtCHanged_handler)
+$objTextBoxI.TabIndex = 2
+
+
 #Text box Messages
 $objTextBoxM = New-Object System.Windows.Forms.TextBox 
-$objTextBoxM.Location = New-Object System.Drawing.Size(10,255) 
+$objTextBoxM.Location = New-Object System.Drawing.Size(10,280) 
 $objTextBoxM.Size = New-Object System.Drawing.Size(260,20) 
 
 
@@ -163,8 +189,10 @@ $HelpDeskForm.Controls.Add($objLabelMFS)
 $HelpDeskForm.Controls.Add($objTextBox) 
 $HelpDeskForm.Controls.Add($objTextBoxMFS) 
 $HelpDeskForm.Controls.Add($objTextBoxMFT) 
+$HelpDeskForm.Controls.Add($objTextBoxI) 
 $HelpDeskForm.Controls.Add($objLabelMFT) 
 $HelpDeskForm.Controls.Add($objTextBoxM) 
+$HelpDeskForm.Controls.Add($objLabelI)
 
 #endregion Generated Form Code
 
