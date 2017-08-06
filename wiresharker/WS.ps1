@@ -16,7 +16,6 @@ $InitialFormWindowState = New-Object System.Windows.Forms.FormWindowState
 #----------------------------------------------
 #Generated Event Script Blocks
 #----------------------------------------------
-#Provide Custom Code for events specified in PrimalForms.
 $handler_GoButton_Click=
 {
    #MAIN BODY
