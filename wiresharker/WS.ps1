@@ -1,27 +1,26 @@
 #Generated Form Function
 function GenerateForm {
 
-#region Import the Assemblies
+#Import the Assemblies
 [reflection.assembly]::loadwithpartialname("System.Windows.Forms") | Out-Null
 [reflection.assembly]::loadwithpartialname("System.Drawing") | Out-Null
-#endregion
 
 #region Generated Form Objects
 $WSForm = New-Object System.Windows.Forms.Form
 $GoButton = New-Object System.Windows.Forms.Button
 $objListBox = New-Object System.Windows.Forms.ListBox 
 $InitialFormWindowState = New-Object System.Windows.Forms.FormWindowState
-#endregion Generated Form Objects
 
 #----------------------------------------------
 #Generated Event Script Blocks
 #----------------------------------------------
-$handler_GoButton_Click=
+$handler_GoButton_Click = 
 {
    #MAIN BODY
-   $i=1
+   $i = 1
+   $ic = 1
    do {
-   $date=Get-Date
+   $date = Get-Date
    $filename = $PSScriptRoot+"\"+$objTextBox.Text+"-"+$date.Year+"-"+$date.Month+"-"+$date.Day+"_"+$date.Hour+"-"+$date.minute+"-"+$date.Second+".pcapng" 
     IF (($objTextBox.Text -ne "") -and ($objTextBoxMFS.Text -ne "") -and ($objTextBoxI.Text -ne ""))
     {
@@ -30,21 +29,25 @@ $handler_GoButton_Click=
         $FirststartDate = Get-Date
         do {
             Start-Sleep 1
-            #Change this to MB
-            $objTextBoxM.Text=("Filesize is "+([math]::Round((Get-Item $filename).Length/1kb,2))+"KB")
+            #Change this to MB if needed (line 34 and 36)
+            $objTextBoxM.Text = ("Filesize is "+([math]::Round((Get-Item $filename).Length/1kb,2))+"KB")
             }
         until ((((Get-Item $filename).Length/1kb) -gt $objTextBoxMFS.Text) -or ((Get-Process | where {$_.Name -like "Wireshark"}) -eq $null) -or ( ((Get-Date) - $FirststartDate).minutes -gt $objTextBoxMFT.Text ))
         #Write Correct status in console
         IF ((Get-Process | where {$_.Name -like "Wireshark"}) -eq $null) 
             {
-            $objTextBoxM.Text="Wireshark process exited."
-            $i=$i+999999999
+            $objTextBoxM.Text = "Wireshark process exited."
+            $i = 999999999
             }
-        IF (((Get-Item $filename).Length/1kb) -gt $objTextBoxMFS.Text) {$objTextBoxM.Text=("Filesize limit of "+$objTextBoxMFS.Text+" reached, stopping capture"); Start-Sleep 2}
-        IF ( ((Get-Date) - $FirststartDate).minutes -gt $objTextBoxMFT.Text  ) {$objTextBoxM.Text=("Wireshark was running for " + ((Get-Date) - $FirststartDate).minutes + " minutes")}
+        IF (((Get-Item $filename).Length/1kb) -gt $objTextBoxMFS.Text) {$objTextBoxM.Text = ("Filesize limit of "+$objTextBoxMFS.Text+" reached, stopping capture"); Start-Sleep 2}
+        IF ( ((Get-Date) - $FirststartDate).minutes -gt $objTextBoxMFT.Text  ) {$objTextBoxM.Text = ("Wireshark was running for " + ((Get-Date) - $FirststartDate).minutes + " minutes"); Start-Sleep 2}
 
-            $i++
-            if ($i -le $objTextBoxI.Text) {$objTextBoxM.Text="Iteration $i started..."}
+            #If number of iterations is not infinity increment iterations counter. Add another counter for infinite number of iterations
+            if (([int]$objTextBoxI.Text -eq 0) -and ((Get-Process | where {$_.Name -like "Wireshark"}) -ne $null))  {$i = 0;$ic++}
+            else {$i++}
+            if (($i -le $objTextBoxI.Text) -and ([int]$objTextBoxI.Text -ne 0)) {$objTextBoxM.Text = "Iteration $i started..."}
+            else {if ((Get-Process | where {$_.Name -like "Wireshark"}) -ne $null -and (([int]$objTextBoxI.Text -eq 0))) {$objTextBoxM.Text = "Iteration $ic started..."}
+                else {$objTextBoxM.Text = "Wireshark process exited"}}
             #Kill all wireshark processes
             do {
             $ProcMonTestProcess = Get-Process | where {$_.ProcessName -eq "wireshark"}
@@ -52,49 +55,39 @@ $handler_GoButton_Click=
             Stop-Process $ProcMonTestProcess.Id}
             }
             while ($ProcMonTestProcess.Id -eq $true)
-            $basefilename=$objTextBox.Text
+            $basefilename = $objTextBox.Text
             
             #Cleanup old files
             dir $PSScriptRoot| where {$_.name -like "$basefilename*"} | % { if (-not ( (dir $PSScriptRoot | where {$_.name -like "$basefilename*"} | sort CreationTime | select -Last $objTextBoxFilesToKeep.Text Name) -match $_.name)) { Remove-Item ($PSScriptRoot+"\"+$_) -Force} }
         }
     ELSE
-        {$objTextBoxM.Text="ERROR: Make sure there are no blank fields"}
+        {$objTextBoxM.Text = "ERROR: Make sure there are no blank fields"}
     }
     UNTIL ($i -gt $objTextBoxI.Text)
 
 }
 
-$OnLoadForm_StateCorrection=
+$OnLoadForm_StateCorrection = 
 {   #Correct the initial state of the form to prevent the .Net maximized form issue
     $WSForm.WindowState = $InitialFormWindowState
-    $objTextBoxM.ReadOnly=$true
-    $objListBox.SelectedIndex=0
-    $objTextBox.Text='WiresharkCapture'
+    $objTextBoxM.ReadOnly = $true
+    $objListBox.SelectedIndex = 0
+    $objTextBox.Text = 'WiresharkCapture'
 }
 
-$objTextBoxMFS_txtCHanged_handler=
-{
-   if ($objTextBoxMFS.Text -match '\D'){
-        $objTextBoxMFS.Text = $objTextBoxMFS.Text -replace '\D' }
+
+Function ControlInput {
+PARAM ([string]$func_in)
+   if ($func_in -match '\D'){
+        $func_in = $func_in -replace '\D'}
+        return $func_in
 }
 
-$objTextBoxMFT_txtCHanged_handler=
-{
-   if ($objTextBoxMFT.Text -match '\D'){
-        $objTextBoxMFT.Text = $objTextBoxMFT.Text -replace '\D' }
-}
-
-$objTextBoxI_txtCHanged_handler=
-{
-   if ($objTextBoxI.Text -match '\D'){
-        $objTextBoxI.Text = $objTextBoxI.Text -replace '\D' }
-}
-
-$objTextBoxFilesToKeep_txtCHanged_handler=
-{
-   if ($objTextBoxFilesToKeep.Text -match '\D'){
-        $objTextBoxFilesToKeep.Text = $objTextBoxFilesToKeep.Text -replace '\D' }
-}
+#Allow only digits in textboxes using function defined above
+$objTextBoxMFS_txtCHanged_handler = { $objTextBoxMFS.Text = [string](ControlInput $objTextBoxMFS.Text) }
+$objTextBoxMFT_txtCHanged_handler = { $objTextBoxMFT.Text = [string](ControlInput $objTextBoxMFT.Text) }
+$objTextBoxI_txtCHanged_handler = { $objTextBoxI.Text = [string](ControlInput $objTextBoxI.Text) }
+$objTextBoxFilesToKeep_txtCHanged_handler = { $objTextBoxFilesToKeep.Text = [string](ControlInput $objTextBoxFilesToKeep.Text) }
 
 #----------------------------------------------
 #Main form
@@ -129,7 +122,7 @@ $objListBox.Location = New-Object System.Drawing.Size(10,30)
 $objListBox.Size = New-Object System.Drawing.Size(260,20) 
 $objListBox.Height = 90
 $objListBox.TabIndex = 0
-Get-NetAdapter | % {[void] $objListBox.Items.Add($_.name)}
+Get-NetAdapter |Sort-Object Name | % {[void] $objListBox.Items.Add($_.name)}
 
 #Top label
 $objLabel = New-Object System.Windows.Forms.Label
